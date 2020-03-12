@@ -1,0 +1,146 @@
+1 Note reinsertion
+    a. Reinsert notes [ 1-a-reinsert_notes ]
+        1. pre-process for processing errors
+            - Pardrang column
+                * find all the csv files containing a pardrang column before the note column
+                  (csv_contains_pardrang_col.py)
+                * rectify the བསྡུར་མཆན་ file
+                  (in nalanda-corpus repo using docx_txt.sh to regenerate the csv file)
+            - replace all ; by , for the csv to be well-formed
+                * the " tr ';' ',' " command in docx_txt.sh
+            - debugging བསྡུར་མཆན་ and/or ཆོས་ཚན་ files
+                use debug_files() function to :
+                    * find and modify the discrepancies in note number and numbers in ཆོས་ཚན་ file with the enters if the reinsertion stops for a given file.
+                    * reformat the notes in the བསྡུར་མཆན་ file if the execution stops because the note is not well formatted
+                    * show the notes where a note has been included in the note text
+                        Manually separate the comments from the note and put them in the column where no other edition can have a note. if there are 3 editions not counting the basis edition(Derge), column 1 contains the edition name, column 2 contains the note. So the comments should be put after the 6th cell, so on K or L.
+                    * create a backup of the both བསྡུར་མཆན་ and ཆོས་ཚན་ files before:
+                        - deleting the lines that are too long to be correctly processed
+                        - deleting both files in case the formatting is too bad
+        2. reinsert notes
+            comment debug_files() and execute the last lines of reinsertion.py to generate the
+
+    b. manually correct the reinsertion [ 1-b-manually_corrected_conc ]
+        1. Rabten corrects the reinsertion [ 1-b-manually_corrected_conc/corrected ]
+            (the remaining 3% of the notes that can’t be correctly reinserted by my script)
+        2. reinsert the removed notes in 1.a.1 [ 1-b-manually_corrected_conc/notes_restored ]
+            - if they are long, keep them for after
+            - if they are short, reinsert them
+        3. Reintegrate discrepancies found by Rabten
+            - correct the xlsx and docx with the errors found (in nalanda_corpus repo) + regenerate the csv and txt files
+            - ???reprocess the files if the reinsertions could not be corrected???
+
+2 Note selection
+0 [criteria_points] : a folder with a yaml for each text that will receive all the points
+		create a template
+				- Automatic categorise (full note)
+						- ཀ་ mistake raised :
+								- ༡  missing vowel
+								- ༢ nga/da
+								- ༣ sskrt
+								- ༤ non-word
+								    - ill-formed
+								    - well-formed
+						- ཁ་ particle difference
+								- ༡ min mod
+								- ༢ differing part
+						- ག་ verb difference
+								- ༡ diff tense
+								- ༢ diff verb
+                        - ང་ All other notes
+                                - free string
+				- Kangyur Ngram frequency (full note)
+						- frequency of note words
+						- frequency of note+context
+			    - note profile : (note ID)
+						- (depends for each text)
+
+				- Manual categorise (full note)
+						- more than 2 differing syls
+								- <F> diff formulation
+								- <M> major mod
+						- evaluation
+								- y (Derge is obviously correct)
+								- a (great meaning diff)
+								- b (medium meaning diff)
+								- c (small meaning diff)
+			    - Non-standard new notes: (note ID)
+			            (<ID>, <string>)
+
+
+        format of each note:
+                (<ID>, <string>, <category correction>)
+                ID: a number from 1 to N
+                category correction: the number of the right category
+
+mistake = {missing_vowel: [], nga_da: [], sskrt: [], non_word: [], other: []}
+1 categorise():
+        0. prepare(ID + full note):
+            def find_words()
+                for each edition:
+                return (ID, (left words, words at note, right words))
+
+            for each note:
+                for each edition:
+                    words = find_words()
+                return (ID, words)
+
+        note = prepare()
+
+        1. raised_mistake(note)
+                0. find_parts()
+                    try to cut in two each syllable
+                    return parts / ill-formed syl
+
+                if not ill-formed:
+                    1. if word is a mistake:
+                        1. missing_vowel()
+                            for each vowel:
+                                if part1 + vowel + part 2 makes a word:
+                                    return True
+                        2. ga_da()
+                            if nga in second part:
+                                if part1 + replaced part2 makes a word:
+                                    return True
+                    2. if the difference is a particle:
+                        1. if is_min_mod()
+                            - it is in the min-mod groups
+                            - it is in the particle groups
+                            - it is a particle agreement difference
+                        2. else:
+                            it is a differing particle
+                    3. if the note word is a verb:
+                        use the list of verbs from Monlam
+                        0. extract the different verbs from the editions
+                        1. if is_diff_tense()
+                            return true
+                        2. if is_diff_verb()
+                            return true
+                    4. if none of the above, it is a wellformed non-word
+
+                else:
+                    either sskrt or non-word
+                    4.  if is_sskrt()
+                            if a regex of Hackett detects is as sskrt:
+                                return True
+                        else:
+                            5. it is a non-word
+
+
+                for notes in the dunno category:
+                    if differing number of note syllables:
+                        6. if 2 or less:
+                           it is most likely a addition or deletion
+                        7. if more than 2:
+                            keep for manual selection (big-mod or formulation)
+                    else:
+                        8. keep all other notes for manual selection
+
+2 Ngram frequency
+use the raw ngrams from 1 to 12
+from bigram onwards, the ngrams with lower frequency than 40 were removed from the results
+
+
+3 Note profiling
+
+
