@@ -87,6 +87,7 @@ def reinsert_raw(in_path, out_path, patterns):
     print('raw reinsertion')
     for f in os.listdir(in_path):
         work_name = f.replace('_with_a.txt', '')
+        print(work_name)
         if work_name in patterns:
             print('\t', work_name)
             content = open_file('{}/{}'.format(in_path, f))
@@ -117,6 +118,7 @@ def reinsert_raw(in_path, out_path, patterns):
             output = '\n{}\n'.format('-' * 100).join(pages)
 
             write_file('{}/{}_raw_page_reinserted.txt'.format(out_path, work_name), output)
+            print('2-2!')
 # # works, but not needed for now…
 # def create_missing_dir(origin_path, target_path, origin_name_end):
 #     to_compare_texts = [g.replace(origin_name_end, '') for g in os.listdir(origin_path) if g.endswith('.txt')]
@@ -145,11 +147,11 @@ raw_out_path = './output/2-2-raw_page_reinserted'
     #     0                     # number of lines pertaining to the current text on the last page
     # ]
 
-patterns_raw = open_file('../4-a-final_formatting/resources/དཀར་ཆག་ཀུན་གསལ་མེ་ལོང་།.csv').strip().split('\n')
+patterns_raw = open_file('C:/Users/trinley/github/canon_notes/4-a-final_formatting/resources/དཀར་ཆག་ཀུན་གསལ་མེ་ལོང་།.csv').strip().split('\n')
 patterns = {}
 for line in patterns_raw[1:]:
-    parts = line.split(',')
-    names = patterns_raw[0].split(',')
+    parts = line.split('\t')
+    names = patterns_raw[0].split('\t')
     # 'ཆོས་ཚན།'
     title = re.sub(r'_conc.*', '', parts[1])
     # 'དབུ།'
@@ -203,8 +205,8 @@ no_valid_lines = ['1-95 རྩོད་པ་བཟློག་པའི་འ�
                   '1-34 དཔལ་གསང་བ་འདུས་པའི་རྒྱུད་ཀྱི་རྒྱུད་འགྲེལ།',
                   '117 ལག་ན་རྡོ་རྗེ་གོས་སྔོན་ཅན་གྱི་སྒྲུབ་ཐབས་ཀྱི་རྒྱ་འགྲེལ།'
                   ]
-for problem in no_valid_lines:
-    del patterns[problem]
+# for problem in no_valid_lines:
+#     del patterns[problem]
 
 reinsert_raw(raw_in_path, raw_out_path, patterns)
 reinsert(in_path, out_path1, out_path2, patterns)

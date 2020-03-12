@@ -1,14 +1,19 @@
 import sys, os
+grandParentDir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(grandParentDir)
+
 from PyTib.common import open_file, write_file, tib_sort, is_sskrt, pre_process
 import PyTib
+import pybo
 import re
 from collections import defaultdict
 
 
-lex_path = '../PyTib/data/uncompound_lexicon.txt'
-lexicon = open_file(lex_path).strip().split('\n')
-lexicon = '\n'.join(tib_sort(list(set(lexicon))))
-write_file(lex_path, lexicon)
+tok = pybo.BoTokenizer('GMD')
+# lex_path = '../PyTib/data/uncompound_lexicon.txt'
+# lexicon = open_file(lex_path).strip().split('\n')
+# lexicon = '\n'.join(tib_sort(list(set(lexicon))))
+# write_file(lex_path, lexicon)
 
 
 def rawify(string):
@@ -43,17 +48,33 @@ def mistake_conc(segmented, work_name, context=5):
     return mistakes
 
 
-in_path = '../1-a-reinsert_notes/input'
+def pybo_segment(content):
+    tkns = tok.tokenize(content)  # tokens
+    out = []
+    for t in tkns:
+        if t.type == 'syl' or t.type == 'non-bo':
+            if t.pos == 'oov' or t.pos == 'non-word' or t.type == 'non-bo':
+                out.append('#' + t.content)
+            else:
+                out.append(t.content)
+        else:
+            out.append(t.content.replace(' ', '_'))
+    return ' '.join(out)
+
+
+in_path = 'out'
 out_path = 'segmented'
 # populate total with the mistakes of all files in in_path
 total = defaultdict(list)
-for f in os.listdir(in_path):
+for f in sorted(os.listdir(in_path)):
     if f.endswith('txt'):
         work_name = f.replace('.txt', '')
+        print(work_name)
         content = open_file('{}/{}'.format(in_path, f))
         content = rawify(content)
-        segmented = PyTib.Segment().segment(content)
-        mistakes = mistake_conc(segmented, work_name)
+        # segmented = PyTib.Segment().segment(content)
+        pybo_segmented = pybo_segment(content)
+        mistakes = mistake_conc(pybo_segmented, work_name)
         for k, v in mistakes.items():
             if not contains_sskrt(k):
                 total[k].extend(v)
