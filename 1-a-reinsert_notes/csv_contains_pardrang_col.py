@@ -1,7 +1,4 @@
 import sys, os
-grandParentDir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(grandParentDir)
-
 from PyTib.common import open_file
 import os
 
@@ -13,4 +10,4 @@ for f in os.listdir('./input'):
             bad.append(f)
 for b in sorted(bad):
     print(b)
-print(len(bad))
+print(f'No. of Bad files: {len(bad)}')
