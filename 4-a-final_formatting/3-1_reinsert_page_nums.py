@@ -145,7 +145,7 @@ raw_out_path = './output/2-2-raw_page_reinserted'
     #     0                     # number of lines pertaining to the current text on the last page
     # ]
 
-patterns_raw = open_file('../4-a-final_formatting/resources/དཀར་ཆག་ཀུན་གསལ་མེ་ལོང་། - format example.csv').strip().split('\n')
+patterns_raw = open_file('../4-a-final_formatting/resources/དཀར་ཆག་ཀུན་གསལ་མེ་ལོང་།.csv').strip().split('\n')
 patterns = {}
 for line in patterns_raw[1:]:
     parts = line.split(',')

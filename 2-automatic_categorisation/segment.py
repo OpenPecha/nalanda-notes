@@ -1,11 +1,11 @@
+import sys, os
 from PyTib.common import open_file, write_file, tib_sort, is_sskrt, pre_process
 import PyTib
-import os
 import re
 from collections import defaultdict
 
 
-lex_path = '../../sandbox/Classes/PyTib/data/uncompound_lexicon.txt'
+lex_path = '../PyTib/data/uncompound_lexicon.txt'
 lexicon = open_file(lex_path).strip().split('\n')
 lexicon = '\n'.join(tib_sort(list(set(lexicon))))
 write_file(lex_path, lexicon)
