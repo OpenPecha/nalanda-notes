@@ -1,4 +1,4 @@
-yaml input:
+input:
 - གྱུར་
 - པ
 - །_།
@@ -22,7 +22,7 @@ yaml input:
 - གཉིད་
 - ལོག་
 
-yaml output:
+output:
 - གྱུར་
 - པ
 - །_།
