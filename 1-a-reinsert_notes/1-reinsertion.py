@@ -3,14 +3,12 @@ from PyTib.common import open_file, write_file, pre_process
 import re
 from xlwt import Workbook
 import yaml
-
 from pathlib import Path
 
 
 parentDir = Path(__file__).resolve().parent
 inDir = parentDir / 'input'
 outDir = parentDir / 'output'
-
 
 
 def is_punct(string):
@@ -353,17 +351,23 @@ def generate_context_versions(editions, file_name, out_dir, left=5, right=5, bas
     write_file(out_dir / f'/conc_yaml/{file_name}_conc.txt', output)
 
 
-def export_unified_structure(editions, text_name, out_dir='output/unified_structure'):
+def export_unified_structure(editions, text_name, out_dir=outDir/'unified_structure'):
     unified = generate_unified_version(editions)
     out = yaml.dump(unified, allow_unicode=True, default_flow_style=False, width=float("inf"))
-    write_file('{}/{}_unified_structure.yaml'.format(out_dir, text_name), out)
+    write_file(out_dir / f'{text_name}_unified_structure.yaml', out)
 
 
 def generate_outputs(text_name, notes_name, context, in_dir=inDir, out_dir=outDir):
+
+    # extract text and reinsert notes
     editions = reinsert_notes(open_file(in_dir/text_name), open_file(in_dir/notes_name).replace(';', ','))
+
     work_name = text_name.split('.')[0].replace(' ', '_')
+    print(work_name)
+
 
     generate_editions(editions, out_dir, work_name)
+    
     export_unified_structure(editions, work_name)
 
     generate_context_versions(editions, work_name, out_dir, left=context, right=context)
@@ -378,7 +382,6 @@ for f in sorted(os.listdir(inDir)):
     if f.endswith('txt') and f not in excluded:
         csv = f.replace('.txt', '')+'.csv'
         works.append((f, csv))
-print(works)
 
 def debug_files(vol_num):
     c = 0
