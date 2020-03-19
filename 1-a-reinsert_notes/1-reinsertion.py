@@ -4,6 +4,14 @@ import re
 from xlwt import Workbook
 import yaml
 
+from pathlib import Path
+
+
+parentDir = Path(__file__).resolve().parent
+inDir = parentDir / 'input'
+outDir = parentDir / 'output'
+
+
 
 def is_punct(string):
     # put in common
@@ -259,64 +267,10 @@ def reinsert_notes(raw_text, raw_notes, basis_edition='སྡེ་'):
 def generate_editions(editions, out_dir, work_name):
     # writing all the editions in their respective folder
     for e in editions:
-        path = out_dir+'/'+e+'/'
+        path = out_dir / 'editions' / e.replace('་', '།') 
         file_name = work_name+'_'+e+'.txt'
         content = ''.join([e[0] for e in editions[e]]).replace('_', ' ')
-        write_file(path+file_name, content)
-
-
-def generate_comparison_spreadsheet(editions, left, work_name, out_dir='output/comparison_xls'):
-    # generating the spreadsheet showing the changes
-    wb = Workbook()
-    sheet1 = wb.add_sheet('Sheet 1')
-
-    ed_names = [a for a in editions if a != 'སྡེ་']
-    num_notes = len(editions['སྡེ་'])
-    line_number = 0
-    for a in range(num_notes):
-        # the versions
-        modifs = []
-        modif_len = 0
-        for ed in ed_names:
-            modif_chunk = pre_process(editions[ed][a][0].replace('_', ' '), mode='syls')
-            modif_size = editions[ed][a][1]
-            if modif_size != '':
-                ed_start = len(modif_chunk) - modif_size
-                if ed_start - left > 0:
-                    ed_start -= left
-                else:
-                    ed_start = 0
-                modif = ''.join(modif_chunk[ed_start:])
-            else:
-                modif = ''  # '༡པ།'
-            modifs.append((ed, modif))
-            # find the length of the modification (take the longest modification)
-            if editions[ed][a][1] != '' and modif_len < editions[ed][a][1]:
-                modif_len = editions[ed][a][1]
-        modifs = sorted(modifs)
-
-        # from Derge
-        orig_chunk = pre_process(editions['སྡེ་'][a][0], mode='syls')
-        start = len(orig_chunk) - modif_len
-        if start - left > 0:
-            start -= left
-        else:
-            start = 0
-        orig_modif = orig_chunk[start:]
-        page = editions['སྡེ་'][a][2]
-        if page != '':
-            sheet1.write(line_number, 0, 'ཤོག་གྲངས་' + page + 'པར་ཡོད་པའི་མཆན་' + str(a + 1) + 'པ།')
-        else:
-            sheet1.write(line_number, 0, 'མཆན་' + str(a + 2) + 'པ།')
-        sheet1.write(line_number, 1, '༼སྡེ་༽ ' + ''.join(orig_modif))
-        sheet1.write(line_number, 2, editions['སྡེ་'][a][3])
-        sheet1.write(line_number, 3, ''.join(orig_chunk))
-        line_number += 1
-        for num, m in enumerate(modifs):
-            sheet1.write(line_number, num, '༼' + m[0] + '༽ ' + m[1])
-        line_number += 2
-    os.makedirs(out_dir, exist_ok=True)
-    wb.save('{}/{}_མཆན།.xls'.format(out_dir, work_name))
+        write_file(path / file_name, content)
 
 
 def generate_unified_version(editions):
@@ -396,7 +350,7 @@ def generate_context_versions(editions, file_name, out_dir, left=5, right=5, bas
     output = re.sub(r"---\n '([0-9]+)':  ''", r'-\1-', output)
     output = re.sub(r"- - '1'\n  - ''", r'-1-', output).replace(" '", '').replace("'", '')
     output = re.sub(r'\n', r',,,,,,,,,,,,,,,\n', output)  # Todo
-    write_file('./{}/conc_yaml/{}_conc.txt'.format(out_dir, file_name), output)
+    write_file(out_dir / f'/conc_yaml/{file_name}_conc.txt', output)
 
 
 def export_unified_structure(editions, text_name, out_dir='output/unified_structure'):
@@ -405,14 +359,12 @@ def export_unified_structure(editions, text_name, out_dir='output/unified_struct
     write_file('{}/{}_unified_structure.yaml'.format(out_dir, text_name), out)
 
 
-def generate_outputs(text_name, notes_name, context, in_dir='input', out_dir='output'):
-    editions = reinsert_notes(open_file('{}/{}'.format(in_dir, text_name)), open_file('{}/{}'.format(in_dir, notes_name)).replace(';', ','))
+def generate_outputs(text_name, notes_name, context, in_dir=inDir, out_dir=outDir):
+    editions = reinsert_notes(open_file(in_dir/text_name), open_file(in_dir/notes_name).replace(';', ','))
     work_name = text_name.split('.')[0].replace(' ', '_')
 
-    #generate_editions(editions, out_dir, work_name)
+    generate_editions(editions, out_dir, work_name)
     export_unified_structure(editions, work_name)
-
-    generate_comparison_spreadsheet(editions, context, work_name)
 
     generate_context_versions(editions, work_name, out_dir, left=context, right=context)
 
@@ -422,7 +374,7 @@ excluded = [#'11-20_ཆོས་མངོན་པའི་འགྲེལ་པ
 vol_num = 0
 
 works = []
-for f in sorted(os.listdir('input')):
+for f in sorted(os.listdir(inDir)):
     if f.endswith('txt') and f not in excluded:
         csv = f.replace('.txt', '')+'.csv'
         works.append((f, csv))
