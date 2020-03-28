@@ -227,6 +227,9 @@ def reinsert_notes(raw_text, raw_notes, basis_edition='སྡེ་'):
                             # if there is a ང་
                             if not edition_text[-1].endswith('ང་'):
                                 edition_text[-1] = edition_text[-1][:-1]
+                        else:
+                            edition_text[-2] = edition_text[-1]
+                            edition_text[-1] = ''
                         edition_text.append(edition_text_last_syl)
 
 
