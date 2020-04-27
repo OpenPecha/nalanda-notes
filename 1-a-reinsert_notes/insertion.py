@@ -25,39 +25,11 @@ def is_punct(string):
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
-
 def strip_particle(word):
-    particles = ['འི','འུ','འོ','ར','འམ','ས']
+    particles = ['འི','འུ','འོ','ར','འམ']
     for particle in particles:
-        word = word.replace(particle, '')
+        word = word.strip(particle)
     return word
-
-
-def minus3_window(edit_text,version_text,index):
-    backward_step = 0
-    flag = False
-    # if index > 2:
-    #     context_syl = edit_text[index-3:index]
-    # elif index > 1:
-    #     context_syl = edit_text[index-2:index]
-    if index > 0:
-        context_syl = edit_text[index-1:index]
-    version_syl = version_text[0]
-    context_syl.reverse()
-    for cur_syl in context_syl:
-        backward_step += 1
-        syl_similarity = similar(cur_syl.strip('་'), version_syl.strip('་'))
-        if syl_similarity >= 0.7:
-            flag = True
-            break
-        elif strip_particle(cur_syl.strip('་')) == strip_particle(version_syl.strip('་')):
-            flag = True
-            break
-    if flag:
-        return backward_step
-    else:
-        return 0
-
 
 
 def reinsert_notes(raw_text, raw_notes, basis_edition='སྡེ་'):
@@ -117,6 +89,8 @@ def reinsert_notes(raw_text, raw_notes, basis_edition='སྡེ་'):
             if content[a]:
             # filters the cases where the second tuple is empty
                 note = content[a+1]
+                if note == 'ལ་ཆུག་མོད་ཀྱི་ཞེས་བྱ་བ་ན།':
+                    print('check')
                 if '(' in note:
                     print('there is a note on top of the comparison.')
                     print('\t'.join(parts))
@@ -203,12 +177,9 @@ def reinsert_notes(raw_text, raw_notes, basis_edition='སྡེ་'):
                                 orig_sync_idx = len(text[number])
                             else:
                                 orig_sync_idx = len(text[number])-1
-                        
                         else:
                             orig_sync_idx = index
                         version_sync_idx = 0
-                    elif strip_particle(long.strip('་')) == strip_particle(short.strip('་')):
-                            orig_sync_idx = len(text[number])-1
 
                 # 2
                 # generating the versions of the different editions
@@ -237,8 +208,6 @@ def reinsert_notes(raw_text, raw_notes, basis_edition='སྡེ་'):
                         del edition_text[orig_sync_idx:]
                     # b if there is no sync point
                     else:
-                        if edition_text_last_syl:
-                            version.append(edition_text_last_syl)
                         del edition_text[len(edition_text)-len(version):]
 
                 # 2.2 if the operation is an addition (p stands for plus)
@@ -252,7 +221,7 @@ def reinsert_notes(raw_text, raw_notes, basis_edition='སྡེ་'):
                     # b if there is no sync point
                     else:
                         # add a tsek if there is none on the last syllable
-                        if not edition_text[-1].endswith('་') and edition_text_last_syl != '།':
+                        if not edition_text[-1].endswith('་'):
                             edition_text[-1] += '་'
                             # remove the ending tsek of version
                             if version[-1].endswith('་'):
@@ -268,8 +237,15 @@ def reinsert_notes(raw_text, raw_notes, basis_edition='སྡེ་'):
                         edition_text[orig_sync_idx:] = version[version_sync_idx:]
                         # 2.b if there is no synchronising point
                     else:
-                        backward_step = minus3_window(edition_text, version, index)
-                        index -= backward_step
+                        ad = 0
+                        prev_similarity = similar(edition_text[index-1].strip('་'), version[0].strip('་'))
+                        diff = len(edition_text[index-1].strip('་'))-len(version[0].strip('་'))
+                        if prev_similarity >= 0.5 and len(version)==1:
+                            ad = 1
+                            index -= 1
+                        elif strip_particle(edition_text[index-1].strip('་')) == strip_particle(version[0].strip('་')):
+                            ad = 1
+                            index -= 1
                         # if len(version)>1:
                         #     if edition_text[index+1] in version:
                         #         index +=1
@@ -278,8 +254,8 @@ def reinsert_notes(raw_text, raw_notes, basis_edition='སྡེ་'):
                             #print(e) # གཞུང་འདིའི་བསླབ་པ་ལ་ནི་བསླབ་པར་   དབུ་མ་རིན་པོ་ཆེའི་སྒྲོན་མ།.txt
                             #print(version[e])
                             edition_text[index + e] = version[e]
-                        if backward_step:
-                            edition_text = edition_text[:-backward_step]
+                        if ad:
+                            del edition_text[-1]
 
                 # A.2 add the punctuation to the end if needed
                 # if a punctuation was saved in A.1 and if it is not the same as the last syllable of edition_text
@@ -290,11 +266,10 @@ def reinsert_notes(raw_text, raw_notes, basis_edition='སྡེ་'):
                             # if there is a ང་
                             if not edition_text[-1].endswith('ང་'):
                                 edition_text[-1] = edition_text[-1][:-1]
-                        elif edition_text[-len(version)] == version[-1] and edition_text[-len(version)] !='།།_།།':
+                        elif edition_text[-len(version)] == version[-1]:
                             edition_text[-2] = edition_text[-1]
                             edition_text[-1] = ''
-                        if edition_text[-len(version)] !='།།_།།':
-                            edition_text.append(edition_text_last_syl)
+                        edition_text.append(edition_text_last_syl)
 
 
                 # 2.4 if a sync point was found, i.e. if the size of version is longer than window_size,
